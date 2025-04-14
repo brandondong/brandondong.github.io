@@ -1,0 +1,16 @@
+---
+import { format } from "date-fns";
+
+const { date } = Astro.props;
+const dateString = format(date, "yyyy-MM-dd");
+---
+
+<style is:global>
+    time.date {
+        font-style: italic;
+        color: var(--text-faded-color);
+        white-space: nowrap;
+    }
+</style>
+
+<time class="date" datetime={dateString}>{dateString}</time>

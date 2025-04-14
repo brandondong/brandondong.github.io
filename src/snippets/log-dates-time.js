@@ -1,0 +1,2 @@
+console.log(new Date('2025-05-28')); // Tue May 27 2025 17:00:00 GMT-0700 (Pacific Daylight Time)
+console.log(new Date('2025-05-28T00:00')); // Wed May 28 2025 00:00:00 GMT-0700 (Pacific Daylight Time)

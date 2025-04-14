@@ -1,0 +1,123 @@
+---
+import { POSTS_TITLE } from "../constants";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>About</title>
+		<style is:global>
+			body {
+				font-family: Papyrus, serif;
+				font-size: 3vh;
+				margin: 0;
+				width: calc(100vw + 1rem);
+				height: calc(100vh + 1rem);
+				cursor: cell;
+			}
+
+			.container {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				overflow: scroll;
+				display: flex;
+				flex-direction: column;
+				background: linear-gradient(
+					45deg,
+					red,
+					orange,
+					yellow,
+					green,
+					blue,
+					indigo,
+					violet
+				);
+			}
+
+			.container > main {
+				flex: 1;
+			}
+
+			ul {
+				margin: 0;
+				padding: 6vh 0 0 6vh;
+			}
+
+			header ul {
+				list-style: none;
+			}
+
+			main {
+				color: red;
+				display: flex;
+				column-gap: 20vh;
+			}
+
+			main::selection {
+				background-color: red;
+				color: white;
+			}
+
+			article {
+				display: flex;
+				column-gap: 8vh;
+			}
+
+			h1 {
+				line-height: 10;
+				white-space: nowrap;
+				align-self: end;
+				margin-left: auto;
+			}
+
+			img {
+				width: 15vh;
+				height: 15vh;
+				border: 2vh solid white;
+				margin-right: auto;
+			}
+
+			footer {
+				overflow: hidden;
+			}
+
+			footer a {
+				display: inline-block;
+				transform: translate(-25%, 0);
+			}
+
+			ul[aria-hidden] {
+				position: absolute;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<nav>
+					<ul>
+						<li>
+							<a href="/">{POSTS_TITLE}</a>
+						</li>
+						<li><a href="/about/">About</a></li>
+					</ul>
+				</nav>
+			</header>
+			<main>
+				<h1>web development is my passion</h1>
+				<img src="/Allan_please_add_image" />
+			</main>
+			<footer>
+				<a href="https://github.com/brandondong" target="_blank"
+					>Github</a
+				>
+			</footer>
+		</div>
+		<ul aria-hidden="true"><li></li><li></li></ul>
+	</body>
+</html>

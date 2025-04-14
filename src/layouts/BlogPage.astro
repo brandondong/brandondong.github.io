@@ -1,0 +1,109 @@
+---
+import "@fontsource-variable/ibm-plex-sans";
+import { POSTS_TITLE } from "../constants";
+
+const { title, footerText } = Astro.props;
+---
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <title>{title}</title>
+        <style is:global>
+            :root {
+                --text-color: oklch(0.208 0.042 265.755); /* slate-900 */
+                --bg-color: white;
+                --text-faded-color: oklch(0.554 0.046 257.417); /* slate-500 */
+                --text-selection-color: oklch(
+                    0.905 0.182 98.111
+                ); /* yellow-300 */
+            }
+
+            html {
+                font-size: 100%;
+            }
+
+            @media (width >= 768px) {
+                html {
+                    font-size: 112.5%;
+                }
+            }
+
+            body {
+                margin: 0 auto;
+                box-sizing: border-box;
+                --page-padding-inline: 1rem;
+                max-width: calc(40rem + 2 * var(--page-padding-inline));
+                padding: 1rem var(--page-padding-inline);
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+                row-gap: 2rem;
+                font-family: "IBM Plex Sans Variable", Arial, sans-serif;
+                color: var(--text-color);
+                background-color: var(--bg-color);
+                line-height: 1.5;
+            }
+
+            body::selection {
+                background-color: var(--text-selection-color);
+            }
+
+            body > main {
+                flex: 1;
+            }
+
+            header ul {
+                display: flex;
+                justify-content: right;
+                column-gap: 2rem;
+                padding: 0;
+                margin: 0;
+                list-style: none;
+            }
+
+            footer {
+                font-style: italic;
+                color: var(--text-faded-color);
+            }
+
+            a {
+                color: var(--text-color);
+                text-decoration-style: dashed;
+                text-decoration-color: var(--text-faded-color);
+                text-underline-offset: 0.25rem;
+                text-decoration-thickness: 1px;
+                outline-color: var(--text-color);
+                outline-offset: 0.125rem;
+            }
+
+            a.target,
+            a:hover {
+                text-decoration-style: solid;
+                text-decoration-color: var(--text-color);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <ul>
+                    <li>
+                        <a
+                            href="/"
+                            class={title === POSTS_TITLE ? "target" : null}
+                            >{POSTS_TITLE}</a
+                        >
+                    </li>
+                    <li><a href="/about/">About</a></li>
+                </ul>
+            </nav>
+        </header>
+        <main>
+            <slot />
+        </main>
+        <footer>{footerText ?? "Powered by developer procrastination"}</footer>
+    </body>
+</html>

@@ -1,0 +1,52 @@
+---
+import BlogPage from "../layouts/BlogPage.astro";
+import DateTime from "../components/DateTime.astro";
+import { POSTS_TITLE, BASE } from "../constants";
+import HeaderTitle from "../components/HeaderTitle.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("blog");
+---
+
+<style is:global>
+	ol.links {
+		list-style: none;
+		padding: 0;
+	}
+
+	ol.links > li {
+		margin: 1rem 0;
+	}
+
+	ol.links > li a {
+		display: flex;
+		column-gap: 1.5rem;
+		text-decoration: none;
+	}
+
+	ol.links > li a:hover > span {
+		text-decoration: underline;
+	}
+</style>
+
+<BlogPage title={POSTS_TITLE}>
+	<HeaderTitle title={POSTS_TITLE} />
+	<ol class="links">
+		{
+			allPosts
+				.sort(
+					(p1: any, p2: any) =>
+						(new Date(p2.data.date) as any) -
+						(new Date(p1.data.date) as any),
+				)
+				.map((post: any) => (
+					<li>
+						<a href={`/${BASE}/${post.id}/`}>
+							<DateTime date={post.data.date} />
+							<span>{post.data.title}</span>
+						</a>
+					</li>
+				))
+		}
+	</ol>
+</BlogPage>
