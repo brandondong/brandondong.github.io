@@ -1,0 +1,51 @@
+---
+import { type CollectionEntry, getCollection } from "astro:content";
+import BlogPage from "../../layouts/BlogPage.astro";
+import HeaderTitle from "../../components/HeaderTitle.astro";
+import "@fontsource-variable/jetbrains-mono";
+import { render } from "astro:content";
+
+export async function getStaticPaths() {
+    const posts = await getCollection("blog");
+    return posts.map((post) => ({
+        params: { slug: post.id },
+        props: post,
+    }));
+}
+type Props = CollectionEntry<"blog">;
+
+const post = Astro.props;
+const { Content } = await render(post);
+const { title, date, customFooter } = post.data;
+---
+
+<style is:global>
+    article {
+        margin-bottom: 2rem;
+    }
+
+    * + section {
+        margin-top: 2rem;
+    }
+
+    code {
+        font-family: "JetBrains Mono Variable", monospace;
+        font-size: 0.875rem;
+    }
+
+    :not(pre) > code {
+        background: #eff1f5;
+        white-space: nowrap;
+    }
+
+    section li {
+        margin: 1rem 0;
+    }
+</style>
+
+<BlogPage title={title} footerText={customFooter}>
+    <article>
+        <HeaderTitle title={title} date={date} />
+        <Content />
+    </article>
+</BlogPage>

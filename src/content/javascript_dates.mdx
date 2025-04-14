@@ -1,0 +1,71 @@
+---
+title: "Why are 2025/05/28 and 2025-05-28 different days in JavaScript?"
+date: '2025-05-28T00:00'
+customFooter: "Posted on it is wednesday, my dudes. 2025, April, maybe...28(?)"
+---
+import CodeBlock from '../components/CodeBlock.astro';
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import logDatesCode from '../snippets/log-dates.js?raw'
+import logDatesFullCode from '../snippets/log-dates-full.js?raw'
+import logDatesFullUTCCode from '../snippets/log-dates-full-utc.js?raw'
+import logDatesTimeCode from '../snippets/log-dates-time.js?raw'
+import logDatesWed from '../snippets/log-dates-wed.js?raw'
+
+While setting up this site itself, I ran into the following oddity:
+<CodeBlock code={logDatesCode} lang="javascript" />
+
+You may get different results on your machine!
+
+<SectionWithLinkHeader header="What's going on?">
+A `Date` in JavaScript always represents a point in time (i.e. milliseconds since epoch). This is more apparent when printing out the full date string:
+<CodeBlock code={logDatesFullCode} lang="javascript" />
+
+In this case, the passed-in date string is being interpreted as a timestamp in my local time zone. `toDateString()` also operates relative to the local time and so we get the same day-of-the-month back out.
+
+The difference with `'2025-05-28'` is in parsing behavior; the string is interpreted as UTC and so ends up at a different point in time:
+<CodeBlock code={logDatesFullUTCCode} lang="javascript" />
+
+Why the discrepancy?
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="The misadventures of browser date-parsing">
+After digging through the code and commit histories of Chrome/Firefox/Safari, I've reconstructed a timeline:
+1. In 2009, these browsers supported parsing a mishmash of date-time formats. When time zone offsets are not explicitly specified in the string, they all fall back to using local time, including for a date string like `'2025/05/28'`.
+1. <a href="https://ecma-international.org/wp-content/uploads/ECMA-262_5th_edition_december_2009.pdf" target="_blank">ES5</a>, to be released at the end of the year, includes a requirement for supporting a new standardized date-time format based heavily off of <a href="https://en.wikipedia.org/wiki/ISO_8601" target="_blank">ISO 8601</a>. This format is broken up into date-<em>only</em> forms like `'2025-05-28'` and date-<em>time</em> forms like `'2025-05-27T17:00-07:00'` where the ending UTC offset is optional.
+    * What does the spec say about time zone interpretation for date-only forms (which never have an offset) or date-time forms missing an offset? Only that <q>The String may be interpreted as a local time, a UTC time, or a time in some other time zone, depending on the contents of the String.</q> (Gee, thanks...)
+1. Firefox is the first to <a href="https://github.com/mozilla-firefox/firefox/commit/b866df4f3680502a8e78e67bd495a96ea3d9c59e" target="_blank">implement this requirement</a>. They choose to interpret date-only forms as UTC and date-time forms missing an offset as local time. Not only is there now a discrepancy between `'2025/05/28'` and `'2025-05-28'`, but also surprising behavior like: <CodeBlock code={logDatesTimeCode} lang="javascript" />
+1. Chrome is <a href="https://chromium.googlesource.com/v8/v8.git/+/6ceb02e6eb791f837ed84b7ed41332058cd3f1dc" target="_blank">next</a>, choosing to use local time for both.
+1. Safari is <a href="https://github.com/WebKit/WebKit/commit/d9bdbae4126006e130914e5ebe57a761d3ea19bb" target="_blank">next</a>, but its parsing logic incorrectly requires that all date, time, and offset fields be present.
+1. <a href="https://262.ecma-international.org/5.1/index.html#sec-15.9.4.2" target="_blank">ES5.1</a> releases in mid-2011 and now additionally mentions that <q>The value of an absent time zone offset is Z.</q>
+1. Chrome <a href="https://chromium.googlesource.com/v8/v8.git/+/ff9ce1abd4add01bbb3f1917bd72207e5ddd70b5" target="_blank">updates its implementation</a> to use UTC for both cases.
+1. Safari <a href="https://github.com/WebKit/WebKit/commit/a841b97de44dbff4ecb30f62e984b1fc72493ac6" target="_blank">fixes the earlier bug</a> and uses UTC for both cases.
+1. A <a href="https://web.archive.org/web/20141214115940/https://bugs.ecmascript.org/show_bug.cgi?id=112" target="_blank">bug</a> is filed against the spec itself, pointing out that ISO 8601 represents date-times without offsets as local time. <a href="https://262.ecma-international.org/6.0/index.html#sec-date-time-string-format" target="_blank">ES6</a> in 2015 replaces the ES5.1 addition with <q>If the time zone offset is absent, the date-time is interpreted as a local time.</q>
+1. Chrome <a href="https://chromium.googlesource.com/v8/v8.git/+/f06754a8e1d305a43560705f6c167d85d40e602d" target="_blank">switches back</a> to using local time for both cases.
+1. A <a href="https://issues.chromium.org/issues/40440226" target="_blank">bug</a> is filed against Chrome for breaking backwards compatibility when parsing date-only forms. They <a href="https://chromium.googlesource.com/v8/v8.git/+/dd3f1ecf719afd21b4c695c776b4da2fb494ef92" target="_blank">revert the previous change</a>.
+1. Chrome files an <a href="https://github.com/tc39/ecma262/issues/87" target="_blank">issue</a> against the spec and after discussion, it's decided to switch date-only forms back to UTC but leave date-time forms without offset as local (i.e. Firefox's behavior).
+1. <a href="https://262.ecma-international.org/7.0/index.html#sec-date.parse" target="_blank">ES7</a> releases with the updated requirement. Chrome <a href="https://chromium.googlesource.com/v8/v8.git/+/d31c5410c4fdfc5eb66582892d5e3ecd3706bd58" target="_blank">makes the change</a> and then eventually, <a href="https://github.com/WebKit/WebKit/commit/2148a43f377e67c60b167f5730c7b5c5c21b202d" target="_blank">Safari</a>.
+
+This behavior has been maintained to the present day where every possible string accepted by the `Date` constructor falls back to local time <em>except</em> valid ISO date-strings like `'2025-05-28'`.
+
+What's interesting looking at the timeline is that despite being designed as a standardized format, from its release in 2009 up until early 2020, there would never exist a point where the major browsers behaved consistently for missing offsets. Meanwhile, Chrome has flipped hilariously from <a href="https://chromium.googlesource.com/v8/v8.git/+/6ceb02e6eb791f837ed84b7ed41332058cd3f1dc" target="_blank">local</a> → <a href="https://chromium.googlesource.com/v8/v8.git/+/ff9ce1abd4add01bbb3f1917bd72207e5ddd70b5" target="_blank">UTC</a> → <a href="https://chromium.googlesource.com/v8/v8.git/+/f06754a8e1d305a43560705f6c167d85d40e602d" target="_blank">local</a> → <a href="https://chromium.googlesource.com/v8/v8.git/+/dd3f1ecf719afd21b4c695c776b4da2fb494ef92" target="_blank">UTC</a> → <a href="https://chromium.googlesource.com/v8/v8.git/+/d31c5410c4fdfc5eb66582892d5e3ecd3706bd58" target="_blank">local</a> when parsing `'2025-05-28T00:00'`. And all this just to settle at Firefox's 2009 behavior which, in my opinion, is the most unintuitive of them all.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="What about Temporal?">
+For the unaware, <a href="https://developer.mozilla.org/en-US/blog/javascript-temporal-is-coming/" target="_blank">JavaScript Temporal is coming</a>: a new set of date and time APIs intended to replace the `Date` object.
+
+Our whole original date parsing issue stemmed from time zone ambiguity but in many cases, the desire is to treat date-only strings as exactly that — dates only. For example, when I say that Christmas this year is `2025-12-25`, I don't mean the universal instant in time that is `2025-12-25T00:00:00.000Z`.
+
+While `Date` can only ever represent the latter, Temporal offers the option of <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/PlainDate" target="_blank">plain dates</a> (i.e. a date without a time zone). `'2025-12-25'` is just `2025-12-25`, side-stepping the parsing ambiguity issue entirely.
+
+But what if one really wants to parse a date-only string into an instant in time? What time zone will Temporal choose when absent in the string itself?
+
+Answer: It's a hard error; an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/Instant#z%C2%B1hhmm" target="_blank">offset</a> or <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime#time_zone_id" target="_blank">time zone identifier</a> must be provided. No repeat mistakes here.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Bonus: enter the cursed zone">
+One thing I never realized until reading browser date-parsing source code is just how lenient it can be.
+
+Here's a fun example for Chrome/Firefox: can you spot why this (valid!) date string is being parsed as the month of May?
+<CodeBlock code={logDatesWed} lang="javascript" />
+
+</SectionWithLinkHeader>

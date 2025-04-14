@@ -1,0 +1,30 @@
+---
+import hljs from "highlight.js";
+import "@catppuccin/highlightjs/css/catppuccin-latte.css";
+
+const { code, lang } = Astro.props;
+const html = hljs.highlight(code, {
+    language: lang,
+    ignoreIllegals: false,
+}).value;
+---
+
+<style is:global>
+    pre.code {
+        margin: 1.5rem 0;
+    }
+
+    pre.code > code {
+        display: block;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        overflow-x: auto;
+        outline-color: var(--text-color);
+    }
+
+    pre.code > code::selection {
+        color: var(--text-color);
+    }
+</style>
+
+<pre class="code"><code class="hljs"><Fragment set:html={html} /></code></pre>

@@ -1,0 +1,15 @@
+---
+const { header } = Astro.props;
+const sectionId = header.replaceAll(" ", "_");
+---
+
+<style is:global>
+    a.header {
+        text-decoration: none;
+    }
+</style>
+
+<section id={sectionId}>
+    <h2><a href={`#${sectionId}`} class="header">{header}</a></h2>
+    <slot />
+</section>
