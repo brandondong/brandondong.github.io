@@ -1,7 +1,7 @@
 ---
 import DateTime from "../components/DateTime.astro";
 
-const { title, date } = Astro.props;
+const { title, date, htmlTitle } = Astro.props;
 ---
 
 <style is:global>
@@ -23,6 +23,6 @@ const { title, date } = Astro.props;
 </style>
 
 <header class="title">
-    <h1>{title}</h1>
+    <h1>{htmlTitle ? <Fragment set:html={htmlTitle} /> : title}</h1>
     {date ? <DateTime date={date} /> : null}
 </header>

@@ -43,7 +43,13 @@ const allPosts = await getCollection("blog");
 					<li>
 						<a href={`/${BASE}/${post.id}/`}>
 							<DateTime date={post.data.date} />
-							<span>{post.data.title}</span>
+							<span>
+								{post.data.htmlTitle ? (
+									<Fragment set:html={post.data.htmlTitle} />
+								) : (
+									post.data.title
+								)}
+							</span>
 						</a>
 					</li>
 				))
