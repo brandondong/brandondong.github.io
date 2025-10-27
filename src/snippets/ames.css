@@ -1,0 +1,29 @@
+@keyframes rotating-y-ccw {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(-360deg);
+  }
+}
+
+/* This parent element will have two children:
+- An <img> of a window
+- An <img> of a ruler */
+.rotating-parent {
+  position: relative;
+  /* Make sure the window and ruler don't combine into a single rotating image. */
+  transform-style: preserve-3d;
+  animation: rotating-y-ccw 15s linear infinite;
+}
+
+.rotating-parent > img.ruler {
+  /* Position the ruler image on top of the window with an initial 90 degree rotation. */
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: rotateY(90deg);
+}

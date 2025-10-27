@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sourced from https://openclipart.org/detail/319483/ames-window-amez-trapezoid with some modifications. -->
+<svg version="1.1" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:osb="http://www.openswatchbook.org/uri/2009/osb" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <g transform="translate(-28.5,-72)">
+    <g transform="matrix(1.4703 0 0 1.4703 -29.488 -77.78)" stroke="#000" stroke-linejoin="round">
+      <path d="m47.93 161.12 135.38-44.619v133.98l-135.38-44.697z M 54.807 179.77652 l 19.371 -0.42522 v -13.0854 h -19.371 Z M 82.5 178.8655 l 32.84 -1.1339 v -18.6887 h -32.982 Z M 125.553 177.0933 l 47.012 -1.6513 v -27.2128 h -47.215 Z M 54.807 200.6741 h 19.371 v -13.0854 l -19.371 -0.42522 Z M 82.358 208.0671 h 32.982 v -18.6887 l -32.84 -1.1339 Z M 125.35 218.7435 h 47.215 v -27.2155 l -47.012 -1.6513 Z" fill="#fff" stroke-width=".26458" />
+      <g fill="#ff7f2a">
+        <path d="m183.31 116.5 10.843 3.5697v126.54l-10.843 3.8691z" stroke-width=".33073" />
+        <path d="m 54.807 166.2659 h 4.8443 l 0.03341 13.377 l -4.8777 0.13363 Z" stroke-width=".26458" />
+        <path d="m 54.807 200.6741 h 4.8443 l 0.03341 -13.377 l -4.8777 -0.13363 Z" stroke-width=".26458" />
+        <path d="m 82.358 159.0429 h 7.2035 v 19.539 l -7.0618 0.28348 Z" stroke-width=".30427" />
+        <path d="m 82.358 208.0671 h 7.2035 v -19.539 l -7.0618 -0.28348 Z" stroke-width=".30427" />
+        <path d="m 125.35 218.7435 h 9.178 v -28.454 l -8.9752 -0.41282 Z" stroke-width=".33073" />
+        <path d="m 125.33 148.2092 h 9.22 v 28.466 l -9.0386 0.43961 Z" stroke-width=".33073" />
+      </g>
+    </g>
+  </g>
+</svg>

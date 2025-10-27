@@ -1,0 +1,29 @@
+---
+
+---
+
+<style is:global>
+    @keyframes rotating-y-ccw {
+        from {
+            transform: rotateY(0deg);
+        }
+
+        to {
+            transform: rotateY(-360deg);
+        }
+    }
+
+    .spin-text-container {
+        perspective: 30rem;
+        display: inline-block;
+    }
+
+    .spin-text {
+        display: inline-block;
+        animation: rotating-y-ccw 15s linear infinite;
+    }
+</style>
+
+<div class="spin-text-container">
+    <span class="spin-text"><slot /></span>
+</div>

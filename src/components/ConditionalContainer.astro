@@ -1,0 +1,13 @@
+---
+const { className } = Astro.props;
+---
+
+{
+    className ? (
+        <div class={className}>
+            <slot />
+        </div>
+    ) : (
+        <slot />
+    )
+}

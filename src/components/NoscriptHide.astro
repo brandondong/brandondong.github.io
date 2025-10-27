@@ -1,0 +1,14 @@
+---
+
+---
+
+<style is:global>
+    noscript:has(div) + div.noscript-hide {
+        display: none;
+    }
+</style>
+
+<noscript><div></div></noscript>
+<div class="noscript-hide">
+    <slot />
+</div>

@@ -1,0 +1,60 @@
+---
+title: "Deconstructing the Ames window illusion"
+date: '2025-12-08T00:00'
+spinFooterText: true
+---
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import AmesWindow from '../components/AmesWindow.astro';
+import YoutubeEmbed from '../components/YoutubeEmbed.astro';
+import NoscriptHide from '../components/NoscriptHide.astro';
+import amesCss from '../snippets/ames.css?raw';
+
+One of my favorite videos on the internet right now is this <a href="https://youtu.be/DkVOIJAaWO0" target="_blank">mind-boggling demonstration of the Ames window illusion</a>.
+<NoscriptHide><YoutubeEmbed src="https://www.youtube-nocookie.com/embed/DkVOIJAaWO0?si=SOH5jW3Gzs6sPEsP" /></NoscriptHide>
+
+I have so many burning questions still: What would happen with more rulers added? Or the trapezoid painted one solid color? Or...
+
+Simulating an Ames window sounds easier than creating a real one. Rather than being sensible and importing a battle-tested library like <a href="https://threejs.org/" target="_blank">Three.js</a>, let's directly use the 3D <b>Web</b> <b>G</b>raphics <b>L</b>ibrary built into the browser. I'm talking, of course, about CSS.
+
+<SectionWithLinkHeader header="Centering the trapezoid">
+Although CSS's 3D capabilities are fairly limited, the simple illusion boils down to a rotating flat image.
+<CodeBlock code={amesCss} lang="css" />
+<AmesWindow />
+
+With our fairly terrible-looking recreation, we can start experimenting.
+
+First, what happens with more rulers attached? Testing this is just a matter of duplicating the ruler `img` element and tweaking positions with `transform: translate()`.
+<AmesWindow enableToggleRulers numRulersValueDefault={3} />
+
+For me, this weakens the illusion but not substantially.
+
+A fun thing to do is to initially hide the rulers; then, right when the window begins to oscillate back, immediately select the multiple rulers option. My brain instantly snaps from seeing an oscillating window to a rotating one.
+
+What about painting the window a single color?
+<AmesWindow enableToggleRulers enableToggleAllWhite useAllWhiteToggleDefault />
+
+Surprisingly, the trapezoid shape alone is enough to create the illusion.
+
+Continuing with shape, let's try a rectangular window but keeping the same trapezoidal holes (and vice versa).
+<AmesWindow enableToggleRulers enableToggleAllWhite enableToggleShape useRectangularShapeDefault />
+
+A rectangular window makes a big difference for me but rectangular holes, almost none.
+
+In the examples so far, we've defaulted to a CSS <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/perspective" target="_blank">perspective</a> value that is five times the width of the content. Think of this as a view pyramid where the tip is five times further away relative to the length of the base -- in this case, the window.
+
+Moving the tip closer, or using a wider field of view, greatly affects the strength of the illusion.
+<AmesWindow enableToggleRulers enableToggleAllWhite enableToggleShape enableTogglePerspective useOneMultiplierPerspectiveDefault />
+
+Here's one final crazy idea: what if instead of a ruler, we intersected another Ames window? Maybe the illusion would somehow cancel itself out?
+<AmesWindow enableChangeAnimDuration={false} enableToggleRulers numRulersValueDefault={0} enableToggleSecondWindow useOrangeSecondWindowDefault hideForm />
+
+Err... what in the world?!
+
+Contrary to my initial reaction, this isn't an error in the CSS. Here it is again with all the previous settings.
+<AmesWindow enableToggleRulers numRulersValueDefault={3} enableToggleAllWhite enableToggleShape useRectangularShapeDefault enableTogglePerspective useOneMultiplierPerspectiveDefault enableToggleSecondWindow useGreenSecondWindowDefault />
+
+I've tried scouring the internet but as far as I can tell, nobody else has ever tried sticking two Ames windows together? _Please_, somebody make this dizzying illusion for real and film it!
+
+I'm going to lie down in the meantime...
+</SectionWithLinkHeader>

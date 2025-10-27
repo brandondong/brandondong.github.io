@@ -1,0 +1,9 @@
+---
+import DateTime from "../components/DateTime.astro";
+
+const { date } = Astro.props;
+---
+
+<style is:global></style>
+
+<>Posted on <DateTime date={date} /></>

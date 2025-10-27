@@ -1,0 +1,418 @@
+---
+import ConditionalContainer from "./ConditionalContainer.astro";
+
+const {
+    enableChangeAnimDuration,
+    enableToggleRulers,
+    numRulersValueDefault,
+    enableToggleAllWhite,
+    useAllWhiteToggleDefault,
+    enableToggleShape,
+    useRectangularShapeDefault,
+    enableTogglePerspective,
+    useOneMultiplierPerspectiveDefault,
+    enableToggleSecondWindow,
+    useOrangeSecondWindowDefault,
+    useGreenSecondWindowDefault,
+    hideForm,
+} = Astro.props;
+
+const numRulersValue = numRulersValueDefault ?? 1;
+const showAnimDuration = enableChangeAnimDuration ?? true;
+---
+
+<style is:global>
+    .ames-container {
+        background: var(--text-color);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        --animation-duration: 15s;
+    }
+
+    .ames-container:has(.d75:checked) {
+        --animation-duration: 7.5s;
+    }
+
+    .ames-container:has(.d30:checked) {
+        --animation-duration: 30s;
+    }
+
+    .view-container {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        --container-width: min(
+            var(--content-max-width),
+            calc(100vw - 2 * var(--page-padding-inline))
+        );
+        perspective: calc(var(--container-width) * 5);
+    }
+
+    .ames-container:has(.p2:checked) .view-container {
+        perspective: calc(var(--container-width) * 2);
+    }
+
+    .ames-container:has(.p1:checked) .view-container {
+        perspective: calc(var(--container-width) * 1);
+    }
+
+    .ames-container .inset {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+
+    .ames-container .transition {
+        transition: all 0.25s ease-out;
+    }
+
+    @keyframes rotating-y-ccw {
+        from {
+            transform: rotateY(0deg);
+        }
+
+        to {
+            transform: rotateY(-360deg);
+        }
+    }
+
+    .rotating-parent {
+        transform-style: preserve-3d;
+        animation: rotating-y-ccw var(--animation-duration) linear infinite;
+    }
+
+    .rotating-parent .r1 {
+        transform: translate(-5%, -6%) rotateY(90deg);
+    }
+
+    .rotating-parent .r2 {
+        transform: translate(-30%, -5%) rotateY(90deg);
+    }
+
+    .rotating-parent .r3 {
+        transform: translate(30%, -7.4%) rotateY(90deg);
+    }
+
+    .ames-container .ruler:not(.r1) {
+        opacity: 0;
+    }
+
+    .ames-container:has(.r0:checked) .ruler.r1 {
+        opacity: 0;
+    }
+
+    .ames-container:has(.r3:checked) .ruler:not(.r1) {
+        opacity: 1;
+    }
+
+    .ames-container:has(.w:checked) .window {
+        filter: contrast(0) brightness(2);
+    }
+
+    .ames-container .window-rect {
+        opacity: 0;
+    }
+
+    .ames-container .window-rect-holes {
+        opacity: 0;
+    }
+
+    .ames-container:has(.sr:checked) .window-rect {
+        opacity: 1;
+    }
+
+    .ames-container:has(.srh:checked) .window-rect-holes {
+        opacity: 1;
+    }
+
+    .ames-container .rotateY270 {
+        transform-style: preserve-3d;
+        transform: rotateY(270deg);
+        opacity: 0;
+    }
+
+    .ames-container:has(.window-orange:checked, .window-green:checked)
+        .rotateY270 {
+        opacity: 1;
+    }
+
+    .ames-container:has(.window-green:checked) .rotateY270 .window {
+        filter: hue-rotate(90deg);
+    }
+
+    .ames-container > form {
+        position: relative;
+        margin: 0.5rem;
+        background: white;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+    }
+
+    .ames-container > form.hidden {
+        display: none;
+    }
+
+    .ames-container > form > .form-overflow {
+        max-height: 8rem;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .ames-container > form input {
+        accent-color: #ff7f2a;
+        outline-color: #ff7f2a;
+    }
+
+    .ames-container fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 1rem;
+        border: 1px dashed var(--text-faded-color);
+    }
+
+    .ames-container fieldset:not(:first-child) {
+        margin-top: 1rem;
+    }
+
+    .ames-container legend {
+        background: var(--text-color);
+        color: white;
+        padding: 0 0.5rem;
+        border-radius: 0.25rem;
+    }
+</style>
+
+<div class="ames-container">
+    <div class="view-container transition">
+        <div class="rotating-parent inset">
+            {
+                (enableToggleSecondWindow ? [0, 1] : [0]).map((i) => (
+                    <ConditionalContainer
+                        className={i === 1 ? "rotateY270 transition" : null}
+                    >
+                        <img
+                            class="window inset transition"
+                            src="/ames_window.svg"
+                            alt="Ames window"
+                        />
+                        {enableToggleShape ? (
+                            <>
+                                <img
+                                    class="window window-rect inset transition"
+                                    src="/ames_window_rect.svg"
+                                    alt="Rectangular Ames window"
+                                />
+                                <img
+                                    class="window window-rect-holes inset transition"
+                                    src="/ames_window_rect_holes.svg"
+                                    alt="Rectangular Ames window"
+                                />
+                            </>
+                        ) : null}
+                        {i === 0 ? (
+                            <>
+                                <img
+                                    class="ruler r1 inset transition"
+                                    src="/ruler.svg"
+                                    alt="Ruler"
+                                />
+                                {enableToggleRulers ? (
+                                    <>
+                                        <img
+                                            class="ruler r2 inset transition"
+                                            src="/ruler.svg"
+                                            alt="Ruler"
+                                        />
+                                        <img
+                                            class="ruler r3 inset transition"
+                                            src="/ruler.svg"
+                                            alt="Ruler"
+                                        />
+                                    </>
+                                ) : null}
+                            </>
+                        ) : null}
+                    </ConditionalContainer>
+                ))
+            }
+        </div>
+    </div>
+    <form class={hideForm ? "hidden" : null}>
+        <div class="form-overflow">
+            {
+                enableToggleSecondWindow ? (
+                    <fieldset>
+                        <legend>Second window</legend>
+                        <label>
+                            <input
+                                type="radio"
+                                name="window-second"
+                                checked={
+                                    !useOrangeSecondWindowDefault &&
+                                    !useGreenSecondWindowDefault
+                                }
+                            />{" "}
+                            Hide
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="window-second"
+                                class="window-orange"
+                                checked={
+                                    useOrangeSecondWindowDefault &&
+                                    !useGreenSecondWindowDefault
+                                }
+                            />{" "}
+                            Orange
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="window-second"
+                                class="window-green"
+                                checked={
+                                    useGreenSecondWindowDefault &&
+                                    !useOrangeSecondWindowDefault
+                                }
+                            />{" "}
+                            Green
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+            {
+                enableTogglePerspective ? (
+                    <fieldset>
+                        <legend>Perspective</legend>
+                        <label>
+                            <input
+                                type="radio"
+                                name="perspective"
+                                checked={!useOneMultiplierPerspectiveDefault}
+                            />{" "}
+                            5 &times; width
+                        </label>
+                        <label>
+                            <input type="radio" name="perspective" class="p2" />{" "}
+                            2 &times; width
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="perspective"
+                                class="p1"
+                                checked={useOneMultiplierPerspectiveDefault}
+                            />{" "}
+                            1 &times; width
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+            {
+                enableToggleShape ? (
+                    <fieldset>
+                        <legend>Shape</legend>
+                        <label>
+                            <input
+                                type="radio"
+                                name="shape"
+                                checked={!useRectangularShapeDefault}
+                            />{" "}
+                            Normal
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="shape"
+                                class="sr"
+                                checked={useRectangularShapeDefault}
+                            />{" "}
+                            Rectangular
+                        </label>
+                        <label>
+                            <input type="radio" name="shape" class="srh" />{" "}
+                            Rectangular holes
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+            {
+                enableToggleAllWhite ? (
+                    <fieldset>
+                        <legend>Colors</legend>
+                        <label>
+                            <input
+                                type="radio"
+                                name="white"
+                                checked={!useAllWhiteToggleDefault}
+                            />{" "}
+                            Normal
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="white"
+                                class="w"
+                                checked={useAllWhiteToggleDefault}
+                            />{" "}
+                            All white
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+            {
+                enableToggleRulers ? (
+                    <fieldset>
+                        <legend>Rulers</legend>
+                        <label>
+                            <input
+                                type="radio"
+                                name="rulers"
+                                class="r0"
+                                checked={numRulersValue === 0}
+                            />{" "}
+                            Hide
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="rulers"
+                                checked={numRulersValue === 1}
+                            />{" "}
+                            Show single
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                name="rulers"
+                                class="r3"
+                                checked={numRulersValue === 3}
+                            />{" "}
+                            Show multiple
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+            {
+                showAnimDuration ? (
+                    <fieldset>
+                        <legend>Animation duration</legend>
+                        <label>
+                            <input type="radio" name="duration" class="d30" />{" "}
+                            30s
+                        </label>
+                        <label>
+                            <input type="radio" name="duration" checked /> 15s
+                        </label>
+                        <label>
+                            <input type="radio" name="duration" class="d75" />{" "}
+                            7.5s
+                        </label>
+                    </fieldset>
+                ) : null
+            }
+        </div>
+    </form>
+</div>

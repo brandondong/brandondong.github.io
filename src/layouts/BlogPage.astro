@@ -2,7 +2,7 @@
 import "@fontsource-variable/ibm-plex-sans";
 import { POSTS_TITLE } from "../constants";
 
-const { title, footerText } = Astro.props;
+const { title } = Astro.props;
 ---
 
 <html lang="en">
@@ -35,7 +35,10 @@ const { title, footerText } = Astro.props;
                 margin: 0 auto;
                 box-sizing: border-box;
                 --page-padding-inline: 1rem;
-                max-width: calc(40rem + 2 * var(--page-padding-inline));
+                --content-max-width: 40rem;
+                max-width: calc(
+                    var(--content-max-width) + 2 * var(--page-padding-inline)
+                );
                 padding: 1rem var(--page-padding-inline);
                 display: flex;
                 flex-direction: column;
@@ -108,6 +111,8 @@ const { title, footerText } = Astro.props;
         <main>
             <slot />
         </main>
-        <footer>{footerText ?? "Powered by developer procrastination"}</footer>
+        <footer>
+            <slot name="footer" />
+        </footer>
     </body>
 </html>
