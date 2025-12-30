@@ -1,0 +1,52 @@
+---
+title: "My most ridiculous bug of 2025"
+date: '2025-12-31T00:00'
+customFooter: "Posted on <null>"
+---
+import CodeBlock from '../components/CodeBlock.astro';
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import controllerCode from '../snippets/Controller.cs?raw'
+import bindCode from '../snippets/Bind.cs?raw'
+import helperCode from '../snippets/Helper.cs?raw'
+import testCode from '../snippets/Test.cs?raw'
+import beforeCode from '../snippets/Before.cs?raw'
+import afterCode from '../snippets/After.cs?raw'
+import testDefaultCode from '../snippets/TestDefault.cs?raw'
+
+During my day job at $COMPANY, I was seeing some very perplexing service behavior that could only be explained by a certain property being unexpectedly null. The property in question:
+<CodeBlock code={controllerCode} lang="csharp" />
+
+Two strange things about this:
+1. The property was set at the start of each request and never reassigned: <CodeBlock code={bindCode} lang="csharp" />
+1. Logs corroborated that it was definitely non-null at certain points of the request processing... but not at others.
+
+There's only a single `Controller` instance created per request. How can a property that is never reassigned seemingly have fluctuating values?
+
+<SectionWithLinkHeader header="Snip snap snip snap">
+After some maddening debugging, the culprit turned out to be in a separate unrelated helper file. Someone had accidentally added a second implementation of the interface property during a large refactor:
+<CodeBlock code={helperCode} lang="csharp" />
+
+Note the explicit `IController.RequestContext` property name. With this, the other `RequestContext` downgraded to a separate `Controller`-specific property.
+
+Having the same name, resolution depended on whether the object's type was _declared_ as `IController` versus `Controller` (even though the concrete type in non-test code was always `Controller`). `CreateController`, operating on an `IController`, populated the interface one, so:
+<CodeBlock code={testCode} lang="csharp" />
+
+This explained why the property value appeared to be fluctuating during the processing of the request. Imagine changing a method signature and then getting different behavior. Madness!
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Sharp edges everywhere">
+Surprisingly, this was not the only time I ran into this type of bug. Someone refactored a method and ended up replacing a boolean parameter with a new one of a different purpose. Before:
+<CodeBlock code={beforeCode} lang="csharp" />
+
+After:
+<CodeBlock code={afterCode} lang="csharp" />
+
+Of course, existing callers were updated with some relying on the default parameter. LGTM.
+
+Except this was actually a method defined on the interface but the change forgot to update it there as well. You'd think this would be a compile error -- the implementer is now using a different parameter name and default value -- but no.
+<CodeBlock code={testDefaultCode} lang="csharp" />
+
+Good god...
+
+Anyways, here's to a happier bug-free 2026!
+</SectionWithLinkHeader>
