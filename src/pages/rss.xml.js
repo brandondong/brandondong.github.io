@@ -8,13 +8,13 @@ export async function GET(context) {
         // `<title>` field in output xml
         title: "Brandon's Blog",
         // `<description>` field in output xml
-        description: 'Powered by developer procrastination',
+        description: 'Powered by procrastination',
         // Pull in your project "site" from the endpoint context
         // https://docs.astro.build/en/reference/api-reference/#site
         site: SITE,
         // Array of `<item>`s in output xml
         // See "Generating items" section for examples using content collections and glob imports
-        items: blog.map((post) => ({
+        items: blog.filter((post) => !post.data.hidden).map((post) => ({
             title: post.data.title,
             pubDate: post.data.date,
             // Compute RSS link from post `id`

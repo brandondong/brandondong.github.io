@@ -1,1 +1,1 @@
-Powered by developer procrastination
+Powered by procrastination
