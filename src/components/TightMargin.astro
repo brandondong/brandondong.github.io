@@ -1,0 +1,17 @@
+---
+
+---
+
+<style is:global>
+    .tight-margin > :not(:last-child) {
+        margin-bottom: 0.25rem;
+    }
+
+    .tight-margin > :not(:first-child) {
+        margin-top: 0.25rem;
+    }
+</style>
+
+<div class="tight-margin">
+    <slot />
+</div>

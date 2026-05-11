@@ -1,0 +1,42 @@
+---
+title: "Big O ≠ worst case"
+hidden: true
+customFooter: "Posted on Big O(ct 16, 2026)"
+---
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import MathBlock from '../components/MathBlock.astro';
+import TightMargin from '../components/TightMargin.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import sortCode from '../snippets/sort.rs?raw'
+
+<MathBlock>
+This misconception is common enough online that it deserves its own bookmarkable refrain.
+
+<SectionWithLinkHeader header="A big refresher">
+First, forget computing exists; big O talks purely about mathematical functions. Specifically, `O(g(x))` is a _set_ of functions containing all `f(x)` where there exists constants `c` and <code>n<sub>0</sub></code> such that `f(n) ≤ c ⋅ g(n)` for all <code>n ≥ n<sub>0</sub></code>.
+
+For example, we can show `f(x) = x + 7 ∈ O(g(x) = x)` using `c = 2`, <code>n<sub>0</sub> = 7</code>. Or `f(x) = 42 ∈ O(g(x) = x + 7)` using `c = 1`, <code>n<sub>0</sub> = 35</code>.
+
+Informally, `f ∈ O(g)` if `g` grows as fast or faster in the long run than `f`. Big O is about asymptotic bounds of pure mathematical functions.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Relation to computing">
+For an algorithm run on computers, we may be interested in some property as a function of the input size. This property can be anything -- time, space, number of comparisons + swaps, etc.
+
+<TightMargin>
+For example, the <a href="https://arxiv.org/abs/2110.01111" target="_blank"> simplest sorting algorithm</a>
+<CodeBlock code={sortCode} lang="rust" />
+results in exactly `n^2` comparisons for any input array of size `n`. The number of comparisons as a function of input length, `f(n) = n^2`, scales quadratically (and is in the set `O(n^2)`).
+</TightMargin>
+
+The number of swaps on the other hand can go as low as `n - 1` to as high as `n(n-1)/2 + 1` depending on the exact input array contents. If we create a separate function for the best case scenario, <code>f<sub>b</sub>(n) = n - 1</code>, and worst case scenario function, <code>f<sub>w</sub>(n) = n(n-1)/2 + 1</code>, then <code>f<sub>b</sub>(n) ∈ O(n)</code> and <code>f<sub>w</sub>(n) ∈ O(n^2)</code>.
+
+Big O is orthogonal to the consideration of only best case input, worst case, an averaging over all inputs, or any other possible subset.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="A pedantic aside">
+Technically, it would also be correct to say the best case scenario for swaps is in `O(n - 7)` and the worst case is in `O(n^3)` but by convention:
+1. Simplify `g` in `O(g)` (i.e. prefer `O(n)` over `O(n - 7)` even though they're identical sets).
+1. Provide tight asymptotic bounds. A formal way of specifying a tight bound is using big Theta notation where `f ∈ Θ(g)` if `f ∈ O(g)` and `g ∈ O(f)`.
+</SectionWithLinkHeader>
+</MathBlock>

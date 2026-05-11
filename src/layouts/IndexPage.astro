@@ -39,6 +39,7 @@ const allPosts = await getCollection("blog");
 						(new Date(p2.data.date) as any) -
 						(new Date(p1.data.date) as any),
 				)
+				.filter((post) => !post.data.hidden)
 				.map((post: any) => (
 					<li>
 						<a href={`/${BASE}/${post.id}/`}>
