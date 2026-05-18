@@ -2,7 +2,7 @@
 import hljs from "highlight.js";
 import "@catppuccin/highlightjs/css/catppuccin-latte.css";
 
-const { code, lang } = Astro.props;
+const { code, lang, expandable } = Astro.props;
 const html = hljs.highlight(code, {
     language: lang,
     ignoreIllegals: false,
@@ -12,6 +12,7 @@ const html = hljs.highlight(code, {
 <style is:global>
     pre.code {
         margin: 1.5rem 0;
+        position: relative;
     }
 
     pre.code > code {
@@ -25,6 +26,42 @@ const html = hljs.highlight(code, {
     pre.code > code::selection {
         color: var(--text-color);
     }
+
+    pre.code:has(input:not(:checked)) > code {
+        max-height: 20rem;
+        overflow: hidden;
+    }
+
+    pre.code > label > input {
+        display: none;
+    }
+
+    pre.code > label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0.5rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: end;
+        font-family: var(--code-font);
+        background-image: linear-gradient(to top, white, transparent 50%);
+        color: var(--text-faded-color);
+        font-style: italic;
+        text-decoration: underline;
+    }
+
+    pre.code > label:hover {
+        color: var(--text-color);
+    }
+
+    pre.code > label:has(input:checked) {
+        display: none;
+    }
 </style>
 
-<pre class="code"><code class="hljs"><Fragment set:html={html} /></code></pre>
+<pre
+    class="code"><code class="hljs"><Fragment set:html={html} /></code>{expandable ? <label><input type="checkbox" />EXPAND</label> : null}</pre>

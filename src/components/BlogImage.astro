@@ -1,0 +1,12 @@
+---
+const props = Astro.props;
+---
+
+<style is:global>
+    img.blog {
+        display: block;
+        width: 100%;
+    }
+</style>
+
+<img class="blog" {...props} />

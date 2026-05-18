@@ -1,0 +1,55 @@
+---
+title: "Git merges can be better"
+date: '2026-06-14T00:00'
+customFooterHtml: "<<<<<<< HEAD<br/>Posted on 2026-06-14<br/>=======<br/>Posted on 2026/06/14<br/>>>>>>>> master"
+---
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+import BlogImage from '../components/BlogImage.astro';
+import gitMergeCode from '../snippets/git_merge.bash?raw'
+
+If your local development workflow is like mine, 99% of merges are `git merge master` (or `main`). Despite being the overwhelming use case, I think this is precisely where git merge UX suffers the most!
+
+<SectionWithLinkHeader header="Papercuts at scale">
+Imagine working in a large monolithic repo with many changes merging continuously. The frequency of merge conflicts might not necessarily be higher but when they do happen, resolution is more painful than it needs to be.
+
+<BlogImage src="/normal_merge_conflict.png" alt="Merge conflict" />
+A typical merge conflict might dump hundreds of unrelated files into the index. While it's simple enough to find and edit the conflicting ones, more involved conflicts often require additional changes elsewhere in your branch. Good luck though when the rest of those changes are lost in an endless sea of staged files.
+
+Compare this to rebase.
+<BlogImage src="/rebase_conflict.png" alt="Rebase conflict" />
+
+Only the changes from our branch are shown. Resolving conflicts is easier with that focused context and before hitting `--continue`, it's possible to re-review the change as a whole.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Conflicts in wetware">
+Here's a pop quiz: in a conflict hunk, is the master version on the top or bottom?
+<BlogImage src="/conflict_hunk.png" alt="Conflict hunk" />
+
+If like me, you can't answer instinctively despite years of resolving conflicts, it's likely because the answer is flipped depending on whether you're using `git merge master` versus `git rebase master`. A well-designed tool should make it easy to develop fast, reliable muscle memory.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Merging in reverse">
+Believe it or not, there is a straightforward solution that addresses all the aforementioned issues. <s>Stick to only rebase and accept the force push tax.</s>
+
+If instead of `git merge master` we merge in the reverse direction (i.e. `git checkout master && git merge dev`), we get the desirable rebase behavior on conflict.
+<BlogImage src="/reverse_merge_conflict.png" alt="Reverse merge conflict" />
+
+Even the conflict hunk orders are consistent between the two now. The downside is we end up in the wrong state.
+<BlogImage src="/merge_diagram.svg" alt="Merge diagram" />
+
+The `master` pointer moved instead of `dev` and the merge commit parents are swapped. But that's fixable in post, and automatable too! We can just alias `git merge` to internally do this reverse merge + fixup step.
+
+For our running example, executing `git merge master` while on `dev` would instead:
+1. Record our current position for later (`current_SHA=$(git rev-parse HEAD)`).
+1. Move `dev` to where `master` currently sits (`git checkout -B dev master`).
+1. Perform the reverse merge (`git merge "${current_SHA}"`).
+1. Once the merge succeeds (either immediately or after conflict resolution), automatically swap the merge commit parents (`git checkout -B dev "$(git commit-tree -p HEAD^2 -p HEAD^1 "HEAD^{tree}")"`).
+
+The final result is _indistinguishable_ from a normal merge while getting the conflict ergonomics of a rebase. No one on your team will know (and of course, no force pushes required). The alias can act as a drop-in replacement and generalize to any merge target.
+
+Here's what that would look like in a `~/.bashrc`:
+<CodeBlock code={gitMergeCode} lang="bash" expandable />
+
+I've been using something similar for the past few months and it's surprising how impactful a tiny UX change like this can feel. No, I'm not more productive. But it's just _nice_ having tools that are a bit more intuitive and enjoyable to use.
+</SectionWithLinkHeader>
