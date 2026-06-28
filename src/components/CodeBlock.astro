@@ -32,23 +32,34 @@ const html = hljs.highlight(code, {
         overflow: hidden;
     }
 
+    pre.code:has(input:not(:checked)) > code::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        backdrop-filter: blur(2px);
+        mask-image: linear-gradient(to top, white, transparent 50%);
+    }
+
+    pre.code:has(input:not(:checked)) > code::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(to top, white, transparent 50%);
+    }
+
     pre.code > label > input {
         display: none;
     }
 
     pre.code > label {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 0.5rem;
+        inset: 0;
+        padding: 1rem;
         cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: end;
         font-family: var(--code-font);
-        background-image: linear-gradient(to top, white, transparent 50%);
         color: var(--text-faded-color);
         font-style: italic;
         text-decoration: underline;
