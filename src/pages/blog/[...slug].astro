@@ -23,9 +23,11 @@ const {
     date,
     customFooter,
     customFooterHtml,
+    borrowErrorFooter,
     htmlTitle,
     spinFooterText,
 } = post.data;
+const borrwCheckFooter = 'format!("Posted on {date}")';
 ---
 
 <style is:global>
@@ -45,7 +47,7 @@ const {
         font-size: 0.875rem;
     }
 
-    :not(pre) > code {
+    :not(pre):not(footer) > code {
         background: #eff1f5;
     }
 
@@ -61,7 +63,14 @@ const {
     </article>
     <Fragment slot="footer"
         >{
-            customFooterHtml ? (
+            borrowErrorFooter ? (
+                <code>
+                    {borrwCheckFooter}
+                    <br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----
+                    immutable borrow later used here
+                </code>
+            ) : customFooterHtml ? (
                 <Fragment set:html={customFooterHtml} />
             ) : spinFooterText ? (
                 <SpinText>{customFooter ?? <PostedOn date={date} />}</SpinText>

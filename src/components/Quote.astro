@@ -1,0 +1,43 @@
+---
+const { quoteText } = Astro.props;
+---
+
+<style is:global>
+    div.quote {
+        position: relative;
+        padding: 1rem 1rem 1rem 0;
+        margin-top: 1.5rem;
+        border-radius: 0.5rem;
+        background: oklch(90.1% 0.058 230.902); /* sky-200 */
+    }
+
+    div.quote > svg {
+        position: absolute;
+        top: 0;
+        left: 0.5rem;
+        width: 2rem;
+        transform: translateY(-30%);
+        color: oklch(68.5% 0.169 237.323); /* sky-500 */
+    }
+
+    div.quote > blockquote {
+        margin-block: 0;
+        margin-right: 0;
+    }
+
+    div.quote > cite {
+        display: block;
+        text-align: right;
+    }
+</style>
+
+<div class="quote">
+    <!-- From https://www.svgbackgrounds.com/elements/quotation-marks/, quote 13. -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 310 310">
+        <path
+            d="M70.62 54.59 20 155.84v101.25h101.25V155.84H70.62l50.63-101.25zM290 52.91h-50.62l-50.63 101.25v101.25H290V154.16h-50.62z"
+            fill="currentColor"></path>
+    </svg>
+    <blockquote><p>{quoteText}</p></blockquote>
+    <cite><slot /></cite>
+</div>
