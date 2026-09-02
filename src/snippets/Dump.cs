@@ -6,12 +6,15 @@ public class Program
 {
     public class Meeting
     {
-        public Meeting(Guid id) { }
+        public Guid Id;
+        public Meeting(Guid id) { Id = id; }
 
         public void Load() { }
         public void Save() { }
 
         public T ReloadAndRetryOnConflict<T>(Func<T> f) { return f(); }
+
+        public void ReloadAndRetryOnConflict(Action f) { }
 
         public Participant GetParticipant(Guid userId)
         {
@@ -41,7 +44,14 @@ public class Program
         public string Id;
     }
 
+    public Task<bool> DoWork1() { return null; }
+
+    public Task<bool> DoWork2() { return null; }
+
+    public Task<bool> DoWork() { return null; }
+
     public static IActionResult Ok() { return null; }
+    public static IActionResult Accepted() { return null; }
 
     [HttpPost("{meetingId}/admitUser/{targetUserId}")]
     public IActionResult AdmitUser(Guid meetingId, Guid targetUserId)
@@ -81,6 +91,46 @@ public class Program
             });
         }
 
-        return Ok();
+        return Accepted();
+    }
+
+    public async Task Process(Meeting meeting)
+    {
+        RunInBackground(async () =>
+        {
+            var result = await DoWork2();
+            meeting.ReloadAndRetryOnConflict(() =>
+            {
+                // ... Update property Y based on result and save.
+            });
+        });
+
+        var result = await DoWork1();
+        meeting.ReloadAndRetryOnConflict(() =>
+        {
+            // ... Update property X based on result and save.
+        });
+    }
+
+    public async Task Process2(Meeting meeting)
+    {
+        RunInBackground(async () =>
+        {
+            // NEW:
+            var newMeeting = new Meeting(meeting.Id);
+            newMeeting.Load();
+
+            var result = await DoWork2();
+            newMeeting.ReloadAndRetryOnConflict(() =>
+            {
+                // ... Update property Y based on result and save.
+            });
+        });
+
+        var result = await DoWork1();
+        meeting.ReloadAndRetryOnConflict(() =>
+        {
+            // ... Update property X based on result and save.
+        });
     }
 }

@@ -6,13 +6,17 @@ borrowErrorFooter: true
 import CodeBlock from '../components/CodeBlock.astro';
 import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
 import Quote from '../components/Quote.astro';
-import admitUserCode from '../snippets/AdmitUser.cs?raw'
+import admitUserCode from '../snippets/AdmitUser.cs?raw';
+import concurrencyCode from '../snippets/Concurrency.cs?raw';
+import concurrencyErrorCode from '../snippets/concurrency_error.rs?raw';
+import concurrencyFixedCode from '../snippets/ConcurrencyFixed.cs?raw';
+import concurrencyAcceptCode from '../snippets/concurrency_accept.rs?raw';
 
 Writing high-level C# at my day job, it's surprisingly not sum types (although I do miss them). Instead, it's the _borrow checker!?_
 
 <SectionWithLinkHeader header="The bugs of nightmares">
 In our backend service, we use a homegrown persistence layer optimized for our specific data access patterns. Imagine a hypothetical domain like virtual video meetings where:
-- Meeting state only needs to exist for the lifetime of the call and can fit on one machine.
+- Meeting state only needs to exist for the duration of the call and can fit on one machine.
 - Client requests mostly update self-participant state, making it unlikely that concurrent requests will logically conflict with another.
 
 In this setting, it might make sense to assign all requests for a particular meeting to one machine, store the data in memory, and rely on optimistic conflict detection with retries to handle concurrency. Typical service code looks something like:
@@ -24,7 +28,8 @@ This approach has some nice properties:
     - Exactly one request will invoke `SendChangedEvent()`.
     - Every other request will observe at most one conflict exception before retrying and no-oping.
 
-The not-so-nice part is the myriad of opportunities for innocuous-looking bugs to sneak in. A prevalent pattern in the codebase looks like:
+The not-so-nice part is the myriad of opportunities for innocuous-looking bugs to sneak in. A (simplified) prevalent pattern in the codebase looks like:
+<CodeBlock code={concurrencyCode} lang="csharp" />
 
 This code is incorrect even if X and Y are distinct, unrelated properties. Consider the interleaving:
 1. The main thread updates property X.
@@ -35,20 +40,25 @@ This code is incorrect even if X and Y are distinct, unrelated properties. Consi
 The net result is that the write to X is lost forever. Trying to piece together what happened through logs after the fact can be a total nightmare.
 
 The beauty of the Rust equivalent is that it does not compile:
+<CodeBlock code={concurrencyErrorCode} lang="rust" />
 
-The proper fix is to load an exclusive object reference for the background thread.
+The proper fix is to load an exclusive object reference for the background thread (reordering the main and background operations might also work for simple cases).
+<CodeBlock code={concurrencyFixedCode} lang="csharp" />
 
-While Rust automatically enforces this via the compiler, we're left with options like stylistic guidelines or reworking `RunInBackground` to load a new object behind the scenes and pass it as a closure argument. The issue with the latter is that not every `RunInBackground` call needs this (e.g. in the first `AdmitUser` snippet, no one else can access `meeting` again) but will now incur the deep clone cost regardless.
+While Rust automatically enforces this via the compiler, we're left with options like stylistic guidelines or reworking `RunInBackground` to load a new object behind the scenes and pass it as a closure argument. The issue with the latter is that not every `RunInBackground` call needs to pay the deep clone cost. For example, in the first `AdmitUser` snippet, no one else can access `meeting` again.
 
-In the Rust version, we don't need to pay this cost unless strictly needed. This compiles:
+In the Rust version, deep cloning can be skipped for precisely that reason. This compiles:
+<CodeBlock code={concurrencyAcceptCode} lang="rust" />
 
 But at the same time, if we ever update the code, the compiler will recheck those assumptions for us.
 </SectionWithLinkHeader>
 
 <SectionWithLinkHeader header="Fearful concurrency">
-Suppose one day, a developer updates the shared helper function to call Save in its implementation. Can anything go wrong? Yes:
+Another prevalent pattern:
 
-Once again, Rust surfaces this as an immediate compile error rather than through some impossible-to-debug production incident later.
+Now suppose one day, a developer updates the shared helper function to call Save in its implementation. Can anything go wrong as result? Consider a list of two participants:
+
+Once again, Rust surfaces this as an immediate compile error rather than through some impossible-to-debug production incident much later.
 
 In all these examples, the underlying issue is accidental aliased mutation. Even with garbage collection, a borrow checker can be invaluable.
 

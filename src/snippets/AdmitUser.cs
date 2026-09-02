@@ -36,5 +36,5 @@ public IActionResult AdmitUser(Guid meetingId, Guid targetUserId)
         });
     }
 
-    return Ok();
+    return Accepted();
 }
