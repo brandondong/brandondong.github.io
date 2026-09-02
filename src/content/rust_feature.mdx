@@ -1,0 +1,58 @@
+---
+title: "The Rust feature I miss most"
+date: '2026-09-30T00:00'
+borrowErrorFooter: true
+---
+import CodeBlock from '../components/CodeBlock.astro';
+import SectionWithLinkHeader from '../components/SectionWithLinkHeader.astro';
+import Quote from '../components/Quote.astro';
+import admitUserCode from '../snippets/AdmitUser.cs?raw'
+
+Writing high-level C# at my day job, it's surprisingly not sum types (although I do miss them). Instead, it's the _borrow checker!?_
+
+<SectionWithLinkHeader header="The bugs of nightmares">
+In our backend service, we use a homegrown persistence layer optimized for our specific data access patterns. Imagine a hypothetical domain like virtual video meetings where:
+- Meeting state only needs to exist for the lifetime of the call and can fit on one machine.
+- Client requests mostly update self-participant state, making it unlikely that concurrent requests will logically conflict with another.
+
+In this setting, it might make sense to assign all requests for a particular meeting to one machine, store the data in memory, and rely on optimistic conflict detection with retries to handle concurrency. Typical service code looks something like:
+<CodeBlock code={admitUserCode} lang="csharp" />
+
+This approach has some nice properties:
+1. The persistence overhead is mainly just deep copying objects in memory. Requests get processed largely without synchronization, only entering the critical section to merge completed changes.
+1. Even when there are conflicts (e.g. multiple clients send concurrent requests to admit the same user), we can logically guarantee:
+    - Exactly one request will invoke `SendChangedEvent()`.
+    - Every other request will observe at most one conflict exception before retrying and no-oping.
+
+The not-so-nice part is the myriad of opportunities for innocuous-looking bugs to sneak in. A prevalent pattern in the codebase looks like:
+
+This code is incorrect even if X and Y are distinct, unrelated properties. Consider the interleaving:
+1. The main thread updates property X.
+1. The background thread updates property Y and calls Save on the shared object reference. It receives a conflict and so calls Load before retrying.
+1. The main thread calls Save successfully (but accomplishes nothing as all dirty properties were blown away on Load).
+1. The background thread retries the closure, updating property Y and calling Save successfully.
+
+The net result is that the write to X is lost forever. Trying to piece together what happened through logs after the fact can be a total nightmare.
+
+The beauty of the Rust equivalent is that it does not compile:
+
+The proper fix is to load an exclusive object reference for the background thread.
+
+While Rust automatically enforces this via the compiler, we're left with options like stylistic guidelines or reworking `RunInBackground` to load a new object behind the scenes and pass it as a closure argument. The issue with the latter is that not every `RunInBackground` call needs this (e.g. in the first `AdmitUser` snippet, no one else can access `meeting` again) but will now incur the deep clone cost regardless.
+
+In the Rust version, we don't need to pay this cost unless strictly needed. This compiles:
+
+But at the same time, if we ever update the code, the compiler will recheck those assumptions for us.
+</SectionWithLinkHeader>
+
+<SectionWithLinkHeader header="Fearful concurrency">
+Suppose one day, a developer updates the shared helper function to call Save in its implementation. Can anything go wrong? Yes:
+
+Once again, Rust surfaces this as an immediate compile error rather than through some impossible-to-debug production incident later.
+
+In all these examples, the underlying issue is accidental aliased mutation. Even with garbage collection, a borrow checker can be invaluable.
+
+<Quote quoteText="As I said once, pure functional programming is an ingenious trick to show you can code without mutation, but Rust is an even cleverer trick to show you can just have mutation.">
+<a href="https://without.boats/blog/notes-on-a-smaller-rust/#:~:text=As%20I%20said%20once%2C%20pure%20functional%20programming%20is%20an%20ingenious%20trick%20to%20show%20you%20can%20code%20without%20mutation%2C%20but%20Rust%20is%20an%20even%20cleverer%20trick%20to%20show%20you%20can%20just%20have%20mutation." target="_blank">withoutboats</a>
+</Quote>
+</SectionWithLinkHeader>

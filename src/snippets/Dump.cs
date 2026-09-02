@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 
 public class Program
 {
@@ -12,7 +13,7 @@ public class Program
 
         public T ReloadAndRetryOnConflict<T>(Func<T> f) { return f(); }
 
-        public Participant GetParticipant(string userId)
+        public Participant GetParticipant(Guid userId)
         {
             return null;
         }
@@ -22,7 +23,7 @@ public class Program
 
     public static void RunInBackground(Action a) { }
 
-    public static Task SendChangedEvent(Meeting m, string userId) { return null; }
+    public static Task SendChangedEvent(Meeting m, Guid userId) { return null; }
 
     public static void Main()
     {
@@ -32,6 +33,7 @@ public class Program
     public class Participant
     {
         public bool IsHandRaised;
+        public bool InLobby;
     }
 
     public class UserToken
@@ -39,7 +41,10 @@ public class Program
         public string Id;
     }
 
-    public void RaiseHand(Guid meetingId, UserToken user)
+    public static IActionResult Ok() { return null; }
+
+    [HttpPost("{meetingId}/admitUser/{targetUserId}")]
+    public IActionResult AdmitUser(Guid meetingId, Guid targetUserId)
     {
         var meeting = new Meeting(meetingId);
         // The data lives in memory, Load just does a deep copy.
@@ -47,21 +52,23 @@ public class Program
 
         var updated = meeting.ReloadAndRetryOnConflict(() =>
         {
-            var participant = meeting.GetParticipant(user.Id);
-            if (participant.IsHandRaised)
+            var participant = meeting.GetParticipant(targetUserId);
+            if (participant?.InLobby != true)
             {
                 return false;
             }
 
-            participant.IsHandRaised = true;
+            participant.InLobby = false;
             meeting.SetParticipantUpdated(participant);
 
-            // Under the hood, Save will acquire the mutex for this meeting
-            // and merge in its dirty properties to the master object.
-            // If the participant we set dirty was updated via another Save
-            // since our last Load/Save, it'll throw a conflict exception.
+            // Under the hood, Save will acquire the mutex for this meeting,
+            // merge in its dirty properties to the master object, and then
+            // call Load before returning.
+            // If during the merge it finds the participant was updated via
+            // another Save since its last Load, it'll throw a conflict
+            // exception instead.
             // ReloadAndRetryOnConflict will then call Load to get clean
-            // up-to-date state and then rerun the closure.
+            // up-to-date state before rerunning the closure.
             meeting.Save();
             return true;
         });
@@ -70,8 +77,10 @@ public class Program
         {
             RunInBackground(async () =>
             {
-                await SendChangedEvent(meeting, user.Id);
+                await SendChangedEvent(meeting, targetUserId);
             });
         }
+
+        return Ok();
     }
 }
