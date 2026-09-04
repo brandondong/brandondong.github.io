@@ -1,3 +1,6 @@
+error[E0382]: borrow of moved value: `meeting`
+  --> src/lib.rs:10:5
+   |
  1 | fn process(mut meeting: Meeting) {
    |            ----------- move occurs because `meeting` has type `Meeting`, which does not implement the `Copy` trait
  2 |     std::thread::spawn(move || {

@@ -11,10 +11,12 @@ import concurrencyCode from '../snippets/Concurrency.cs?raw';
 import concurrencyErrorCode from '../snippets/concurrency_error.rs?raw';
 import concurrencyFixedCode from '../snippets/ConcurrencyFixed.cs?raw';
 import concurrencyAcceptCode from '../snippets/concurrency_accept.rs?raw';
+import loopCode from '../snippets/Loop.cs?raw';
+import mutableCode from '../snippets/mutable.rs?raw';
 
 Writing high-level C# at my day job, it's surprisingly not sum types (although I do miss them). Instead, it's the _borrow checker!?_
 
-<SectionWithLinkHeader header="The bugs of nightmares">
+<SectionWithLinkHeader header="Fearful concurrency">
 In our backend service, we use a homegrown persistence layer optimized for our specific data access patterns. Imagine a hypothetical domain like virtual video meetings where:
 - Meeting state only needs to exist for the duration of the call and can fit on one machine.
 - Client requests mostly update self-participant state, making it unlikely that concurrent requests will logically conflict with another.
@@ -33,7 +35,7 @@ The not-so-nice part is the myriad of opportunities for innocuous-looking bugs t
 
 This code is incorrect even if X and Y are distinct, unrelated properties. Consider the interleaving:
 1. The main thread updates property X.
-1. The background thread updates property Y and calls Save on the shared object reference. It receives a conflict and so calls Load before retrying.
+1. The background thread updates property Y and calls Save on the shared object reference. It receives a conflict due to another concurrent request and so calls Load before retrying.
 1. The main thread calls Save successfully (but accomplishes nothing as all dirty properties were blown away on Load).
 1. The background thread retries the closure, updating property Y and calling Save successfully.
 
@@ -45,7 +47,7 @@ The beauty of the Rust equivalent is that it does not compile:
 The proper fix is to load an exclusive object reference for the background thread (reordering the main and background operations might also work for simple cases).
 <CodeBlock code={concurrencyFixedCode} lang="csharp" />
 
-While Rust automatically enforces this via the compiler, we're left with options like stylistic guidelines or reworking `RunInBackground` to load a new object behind the scenes and pass it as a closure argument. The issue with the latter is that not every `RunInBackground` call needs to pay the deep clone cost. For example, in the first `AdmitUser` snippet, no one else can access `meeting` again.
+While Rust automatically enforces this via the compiler, we're left with options like stylistic guidelines or reworking `RunInBackground` to load a new object behind the scenes and pass it as a closure argument. The issue with the latter is that not every `RunInBackground` call needs to pay this deep clone cost. For example, in the first `AdmitUser` snippet, no one else can access `meeting` again.
 
 In the Rust version, deep cloning can be skipped for precisely that reason. This compiles:
 <CodeBlock code={concurrencyAcceptCode} lang="rust" />
@@ -53,14 +55,18 @@ In the Rust version, deep cloning can be skipped for precisely that reason. This
 But at the same time, if we ever update the code, the compiler will recheck those assumptions for us.
 </SectionWithLinkHeader>
 
-<SectionWithLinkHeader header="Fearful concurrency">
-Another prevalent pattern:
+<SectionWithLinkHeader header="Blazingly fragile">
+Here's another common pattern:
+<CodeBlock code={loopCode} lang="csharp" />
 
-Now suppose one day, a developer updates the shared helper function to call Save in its implementation. Can anything go wrong as result? Consider a list of two participants:
+Suppose one day, a developer introduces a Save call inside the `SharedHelper` implementation. Now, for two participants:
+1. In the first loop iteration, user A is updated and has their changes saved. The successful Save call in `SharedHelper` causes `meeting`'s state to be reloaded and `participants` to now be a stale reference to the old state.
+1. Depending on the exact circumstance and persistence layer implementation detail, the second Save may result in lost changes, overwritten data, or something in between. Imagine if the first Save's reload revealed that user B has since been removed by another request.
 
 Once again, Rust surfaces this as an immediate compile error rather than through some impossible-to-debug production incident much later.
+<CodeBlock code={mutableCode} lang="rust" />
 
-In all these examples, the underlying issue is accidental aliased mutation. Even with garbage collection, a borrow checker can be invaluable.
+In all these examples, the underlying issue is accidental aliased mutation. Even in a high-level garbage collected language, a borrow checker can be invaluable.
 
 <Quote quoteText="As I said once, pure functional programming is an ingenious trick to show you can code without mutation, but Rust is an even cleverer trick to show you can just have mutation.">
 <a href="https://without.boats/blog/notes-on-a-smaller-rust/#:~:text=As%20I%20said%20once%2C%20pure%20functional%20programming%20is%20an%20ingenious%20trick%20to%20show%20you%20can%20code%20without%20mutation%2C%20but%20Rust%20is%20an%20even%20cleverer%20trick%20to%20show%20you%20can%20just%20have%20mutation." target="_blank">withoutboats</a>

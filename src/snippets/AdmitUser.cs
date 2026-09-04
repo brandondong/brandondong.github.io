@@ -13,8 +13,7 @@ public IActionResult AdmitUser(Guid meetingId, Guid targetUserId)
             return false;
         }
 
-        participant.InLobby = false;
-        meeting.SetParticipantUpdated(participant);
+        participant.SetInLobby(false);
 
         // Under the hood, Save will acquire the mutex for this meeting,
         // merge in its dirty properties to the master object, and then

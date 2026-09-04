@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,8 @@ public class Program
         }
 
         public void SetParticipantUpdated(Participant p) { }
+
+        public List<Participant> GetAllParticipants() { return null; }
     }
 
     public static void RunInBackground(Action a) { }
@@ -37,6 +40,11 @@ public class Program
     {
         public bool IsHandRaised;
         public bool InLobby;
+        public bool IsMuted;
+        public Guid Id;
+
+        public void SetInLobby(bool b) { }
+        public void SetIsHandRaised(bool b) { }
     }
 
     public class UserToken
@@ -68,8 +76,7 @@ public class Program
                 return false;
             }
 
-            participant.InLobby = false;
-            meeting.SetParticipantUpdated(participant);
+            participant.SetInLobby(false);
 
             // Under the hood, Save will acquire the mutex for this meeting,
             // merge in its dirty properties to the master object, and then
@@ -93,6 +100,9 @@ public class Program
 
         return Accepted();
     }
+
+    public void SharedHelper(Meeting meeting, Guid userId)
+    { }
 
     public async Task Process(Meeting meeting)
     {
@@ -132,5 +142,18 @@ public class Program
         {
             // ... Update property X based on result and save.
         });
+    }
+
+    public void LowerHands(Meeting meeting)
+    {
+        var participants = meeting.GetAllParticipants();
+        foreach (var participant in participants)
+        {
+            participant.SetIsHandRaised(false);
+
+            this.SharedHelper(meeting, participant.Id);
+        }
+
+        meeting.Save();
     }
 }
