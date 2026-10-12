@@ -6,6 +6,7 @@ import SpinText from "../../components/SpinText.astro";
 import "@fontsource-variable/jetbrains-mono";
 import { render } from "astro:content";
 import PostedOn from "../../components/PostedOn.astro";
+import NonAccessiblePostedOn from "../../components/NonAccessiblePostedOn.astro";
 
 export async function getStaticPaths() {
     const posts = await getCollection("blog");
@@ -24,6 +25,7 @@ const {
     customFooter,
     customFooterHtml,
     borrowErrorFooter,
+    nonAccessibleFooter,
     htmlTitle,
     spinFooterText,
 } = post.data;
@@ -70,6 +72,8 @@ const borrwCheckFooter = 'format!("Posted on {date}")';
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;----
                     immutable borrow later used here
                 </code>
+            ) : nonAccessibleFooter ? (
+                <NonAccessiblePostedOn date={date} />
             ) : customFooterHtml ? (
                 <Fragment set:html={customFooterHtml} />
             ) : spinFooterText ? (

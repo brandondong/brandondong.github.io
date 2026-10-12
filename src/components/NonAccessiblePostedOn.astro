@@ -1,0 +1,17 @@
+---
+import PostedOn from "./PostedOn.astro";
+
+const { date } = Astro.props;
+---
+
+<style is:global>
+    .non-accessible,
+    .non-accessible time {
+        user-select: none;
+        color: oklch(86.9% 0.022 252.894); /* slate-300 */
+    }
+</style>
+
+<span class="non-accessible">
+    <PostedOn date={date} />
+</span>
