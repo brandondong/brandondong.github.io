@@ -23,7 +23,9 @@ const html = hljs.highlight(code, {
         outline-color: var(--text-color);
     }
 
-    pre.code > code::selection {
+    /* ::selection doesn't inherit... https://bugzilla.mozilla.org/show_bug.cgi?id=1749166 */
+    pre.code > code::selection,
+    pre.code > code ::selection {
         color: var(--text-color);
     }
 

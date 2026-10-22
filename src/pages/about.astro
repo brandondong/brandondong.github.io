@@ -62,7 +62,8 @@ import { POSTS_TITLE } from "../constants";
 				column-gap: calc(20 * var(--vh2));
 			}
 
-			main::selection {
+			/* ::selection doesn't inherit... https://bugzilla.mozilla.org/show_bug.cgi?id=1749166 */
+			main ::selection {
 				background-color: red;
 				color: white;
 			}

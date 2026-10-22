@@ -34,12 +34,12 @@ const allPosts = await getCollection("blog");
 	<ol class="links">
 		{
 			allPosts
+				.filter((post) => !post.data.hidden)
 				.sort(
 					(p1: any, p2: any) =>
-						(new Date(p2.data.date) as any) -
-						(new Date(p1.data.date) as any),
+						new Date(p2.data.date).getTime() -
+						new Date(p1.data.date).getTime(),
 				)
-				.filter((post) => !post.data.hidden)
 				.map((post: any) => (
 					<li>
 						<a href={`/${BASE}/${post.id}/`}>

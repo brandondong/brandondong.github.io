@@ -14,7 +14,11 @@ export async function GET(context) {
         site: SITE,
         // Array of `<item>`s in output xml
         // See "Generating items" section for examples using content collections and glob imports
-        items: blog.filter((post) => !post.data.hidden).map((post) => ({
+        items: blog.filter((post) => !post.data.hidden).sort(
+            (p1, p2) =>
+                new Date(p2.data.date).getTime() -
+                new Date(p1.data.date).getTime(),
+        ).map((post) => ({
             title: post.data.title,
             pubDate: post.data.date,
             // Compute RSS link from post `id`
